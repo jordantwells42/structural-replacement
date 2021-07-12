@@ -223,9 +223,9 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
     print(f"Completed evaluating ligands, time taken {(time.time() - t0) / 60} minutes")
 
 
-def lig_and_vdm_to_PDB(lig, instances, file_stem, outpath = "vdms"):
+def lig_and_vdm_to_PDB(lig, instances, file_stem, outpath = "vdm_pdbs"):
     try:
-        os.mkdir("vdms")
+        os.mkdir("vdm_pdbs")
     except:
         pass
     try:
@@ -261,7 +261,7 @@ def lig_and_vdm_to_PDB(lig, instances, file_stem, outpath = "vdms"):
     return
 
 
-def vdm_to_PDB(instances, file_stem, outpath = "vdms"):
+def vdm_to_PDB(instances, file_stem, outpath = "vdm_pdbs"):
     try:
         os.mkdir(outpath)
     except:
