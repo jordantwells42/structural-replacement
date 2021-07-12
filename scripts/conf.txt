@@ -73,7 +73,7 @@ IncludeSC = False
 ### REQUIRED ###
 
 # Where your reduced vdm database is located
-VDM_Directory = 
+VDM_Directory = ../vdm_database
 
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
