@@ -1,0 +1,107 @@
+[DEFAULT]
+
+### REQUIRED ###
+
+# Your path to your local installation of Rosetta, e.g. /mnt/c/users/jorda/desktop/software/rosetta
+PathToRosetta =
+
+# Your path to your local installation of PyRosetta, e.g. /mnt/c/users/jorda/desktop/software/pyrosetta
+PathToPyrosetta =
+
+# The pdb file you wish to use for the protocols e.g. my_enzyme.pdb
+PDBFileName = 
+
+# The number of the residue you wish to map onto, this can be a ligand on a separate chain e.g. 12
+ResidueNumber = 
+
+# The chain the previous residue number is on, e.g. A
+ChainLetter = A
+
+
+### OPTIONAL ###
+
+# Where to store the generated params and pdb files
+PathToConformers = conformers
+
+# What to name the table that is generated
+CSVFileName = Ligands.csv
+
+# What to name the pandas DataFrame that is generated
+PKLFileName = Ligands.pkl
+
+# If your protein has a ligand and requires .params files, input a space separated list of them here 
+ParamsList = 
+
+
+
+[create_table]
+
+### REQUIRED ###
+
+# Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
+# if they follow a convention 'mol1.sdf mol2.sdf ' then a wild-card (*) can be used 'mol*'
+MoleculeSDFs =  
+
+
+### OPTIONAL ###
+
+# Set to True if your SDF files have a comment on the third line with a CAS ID
+UseMoleculeID = False
+
+# Set to True if your molecules have no name on the sdf file, uses a simple count instead
+NoName = False
+
+
+
+[grade_conformers]
+
+### OPTIONAL ###
+
+# Width of the grid for performing backbone collision checking e.g. 1.0
+BinWidth = 1.0
+
+# By what factor to multiply pauling vdw radii by in the grid calculation e.g. 0.7
+VDW_Modifier = 0.7
+
+# Whether to check collision against just backbone or include side chain atoms
+IncludeSC = False
+
+
+
+[vdm]
+
+### REQUIRED ###
+
+# Where your reduced vdm database is located
+VDM_Directory = 
+
+# A resfile containing residue that you wish to be mutated/included in vdM calculations
+# If you want a residue to be included for making vdMs but not to be able to mutate simply do
+# {res_num} A PIKAA {native residue_type, "A" for alanine} in the resfile
+Resfile = 
+
+
+### OPTIONAL ###
+
+# What to name the outputed vdM score information .pkl file
+OutputFileName = vdm_scored.pkl
+
+# What file stem to base the precalculated info about the vdM space
+VDMSpaceFileStem = VDM-SPACE
+
+# Minimum accepted score for vdMs, 0 is the average
+VDMScoreCutoff = 0
+
+# Maximum accepted (sorta) RMSD between ligand CG and vdM cG
+RMSDCutoff = 1.0
+
+# Whether to linearly interpolate between 0 and score depending on RMSD
+LERP = False
+
+
+
+
+
+
+
+
