@@ -178,7 +178,7 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
         ssfgs = fg_satisfaction.count("by Solvent")
         usfgs = fg_satisfaction.count(False)
 
-        lig_and_vdm_to_PDB(conf.pose, [e[3] for e in vdm_set] , f"{conf.id}_{conf.conf_num:04}", f"vdms/{conf.id}")
+        lig_and_vdm_to_PDB(conf.pose, [e[3] for e in vdm_set] , f"{conf.id}_{conf.conf_num:04}", f"vdm_pdbs/{conf.id}")
 
         mutations = [f"{pose.residue(position).name1()}" + \
                      f"{pose.pdb_info().pose2pdb(position).split()[0]}" + 
