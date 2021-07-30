@@ -11,7 +11,7 @@ import pandas as pd
 import argparse
 
 class Conformer():
-    def __init__(self, pose, conf_num, mol_name, mol_id, lig_aid, t_aid = None, t_coords = None):
+    def __init__(self, pose, conf_num, mol_name, mol_id, lig_aid, t_aid = None, t_coords = None, ligand_residue = 1):
         self.pose = pose
         self.conf_num = conf_num
         self.name = mol_name
@@ -19,6 +19,7 @@ class Conformer():
         self.lig_aid = lig_aid
         self.t_aid = t_aid
         self.t_coords = t_coords
+        self.ligand_residue = ligand_residue
 
         self.pose.pdb_info().name(f"{self.name}, {self.id}")
 
@@ -29,10 +30,10 @@ class Conformer():
             align_ligand_to_target_coords(self.pose, self.lig_aid, self.t_coords)
 
     def check_collision(self, grid):
-        return grid.check_collision(self.pose.residue(1))
+        return grid.check_collision(self.pose.residue(self.ligand_residue))
 
     def determine_functional_groups(self, verbose = False, bioisostere = False):
-        lig = self.pose.residue(1)
+        lig = self.pose.residue(self.ligand_residue)
         ligtype = lig.type()
 
         # List of tuples of (group name, xyz coordinate matrix)
@@ -311,9 +312,11 @@ class Conformer():
 
         return groups
 
+    def get_residue(self):
+        return self.pose.residue(self.ligand_residue)
 
 
-def yield_ligand_poses(pkl_file, path_to_conformers, post_accepted_conformers):
+def yield_ligand_poses(df, path_to_conformers, post_accepted_conformers, ligand_residue = 1):
     """
     Python generator which lazily loads in conformers from params files and pdb files as needed to avoid
     memory issues
@@ -350,8 +353,7 @@ def yield_ligand_poses(pkl_file, path_to_conformers, post_accepted_conformers):
 
     """
 
-    df = pd.read_pickle(pkl_file)
-    if not post_accepted_conformers or "Accepted Conformers" not in list(df.columns):
+    if not post_accepted_conformers:
         for index, row in df.iterrows():
             lig = Pose()
             
@@ -366,7 +368,14 @@ def yield_ligand_poses(pkl_file, path_to_conformers, post_accepted_conformers):
             for i in range(*conformer_range):
                 conformation_file = f"{path_to_conformers}/{file_stem}_{i:04}.pdb"
                 pose_from_file(lig, res_set, conformation_file)
-                conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_aid = row["Target Atoms"])
+                t_aln = row["Target Atoms"]
+                try:
+                    float(t_aln[0])
+
+                    t_atoms = [float(e) for e in row["Target Atoms"]]
+                    conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_coords = t_atoms, ligand_residue = ligand_residue)
+                except ValueError:
+                    conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_aid = t_aln, ligand_residue = ligand_residue)
                 yield conf
             yield None
     else:     
@@ -383,19 +392,17 @@ def yield_ligand_poses(pkl_file, path_to_conformers, post_accepted_conformers):
             for i in conformers:
                 conformation_file = f"{path_to_conformers}/{file_stem}_{i:04}.pdb"
                 pose_from_file(lig, res_set, conformation_file)
-                conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_aid = row["Target Atoms"])
+                t_aln = row["Target Atoms"]
+                try:
+                    float(t_aln[0])
+
+                    t_atoms = [float(e) for e in row["Target Atoms"]]
+                    conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_coords = t_atoms, ligand_residue = ligand_residue)
+                except ValueError:
+                    conf = Conformer(lig, i, row["Molecule Name"], row["Molecule ID"], row["Molecule Atoms"], t_aid = t_aln, ligand_residue = ligand_residue)
                 yield conf
             else:
                 yield None
-
-
-
-def main(argv):
-    pass
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
 
 
 

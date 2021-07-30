@@ -123,10 +123,10 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
     lig_aid = None
     df = []
 
-    ligand_generator = conformer_prep.yield_ligand_poses(pkl_file = pkl_file, path_to_conformers = path_to_conformers, post_accepted_conformers = True)
+    ligand_generator = conformer_prep.yield_ligand_poses(df = pd.read_pickle(pkl_file), path_to_conformers = path_to_conformers, post_accepted_conformers = True)
                         
 
-    for pose_info in ligand_generator:
+    for count, pose_info in enumerate(ligand_generator):
         if not pose_info:
             continue
 
@@ -135,7 +135,7 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
         conf.align_to_target(res)
         ligand_grid = collision_check.CollisionGrid(conf.pose, bin_width = 0.5, vdw_modifier = 0.5, include_sc = True)
         #print(ligand_grid.grid)
-        fgs = conf.determine_functional_groups()
+        fgs = conf.determine_functional_groups(bioisostere = False)
         
         possibilities = defaultdict(list)
         for i, (group_name, atomnos, coords) in enumerate(fgs):
@@ -178,7 +178,8 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
         ssfgs = fg_satisfaction.count("by Solvent")
         usfgs = fg_satisfaction.count(False)
 
-        lig_and_vdm_to_PDB(conf.pose, [e[3] for e in vdm_set] , f"{conf.id}_{conf.conf_num:04}", f"vdm_pdbs/{conf.id}")
+        if num_vdms > 2:
+            lig_and_vdm_to_PDB(conf.pose, [e[3] for e in vdm_set] , f"{conf.id}_{conf.conf_num:04}_{count%100:02}", f"vdm_pdbs/{conf.id}")
 
         mutations = [f"{pose.residue(position).name1()}" + \
                      f"{pose.pdb_info().pose2pdb(position).split()[0]}" + 
@@ -324,12 +325,18 @@ def main(argv):
     params_list = default["ParamsList"]
 
     if len(params_list) > 0:
-        pose = Pose()
-        pmm = pyrosetta.PyMOLMover()
-        res_set = pyrosetta.generate_nonstandard_residue_set(pose, params_list = params_list.split(" "))
-        pyrosetta.pose_from_file(pose, res_set, default["PDBFileName"])
+        pre_pose = Pose()
+        res_set = pyrosetta.generate_nonstandard_residue_set(pre_pose, params_list = params_list.split(" "))
+        pyrosetta.pose_from_file(pre_pose, res_set, default["PrePDBFileName"])
+
+        post_pose = Pose()
+        res_set = pyrosetta.generate_nonstandard_residue_set(post_pose, params_list = params_list.split(" "))
+        pyrosetta.pose_from_file(post_pose, res_set, default["PostPDBFileName"])
     else:
-        pose = pyrosetta.pose_from_pdb(default["PDBFileName"])
+        pre_pose = pyrosetta.pose_from_pdb(default["PrePDBFileName"])
+        post_pose = pyrosetta.pose_from_pdb(default["PostPDBFileName"])
+
+    res = pre_pose.residue(pre_pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"])))
 
     vdm_space_file_stem = spec["VDMSpaceFileStem"]
     path_to_conformers = default["PathToConformers"]
@@ -339,12 +346,8 @@ def main(argv):
     lerp = spec["LERP"] == "True"
 
 
-    res_num = pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"]))
-    align_ligands_to_residue_and_score_from_generator(pose, pose.residue(res_num), path_to_conformers,  output_file_name, 
+    align_ligands_to_residue_and_score_from_generator(post_pose, res, path_to_conformers,  output_file_name, 
                                                         pkl_file_name, vdm_space_file_stem, rmsd_cutoff, lerp)
-
-
-
 
     
 if __name__ == "__main__":

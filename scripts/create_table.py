@@ -40,7 +40,7 @@ def generate_params_pdb_and_table(mtp, csv_file_name, path_to_conformers, molecu
         pass
 
 
-    with open(csv_file_name, "a+") as f:
+    with open(csv_file_name, "w+") as f:
         f.write("Molecule Name,Molecule ID,Conformer Range,Molecule Atoms,Target Atoms\n")
         for i, molecule_sdf in enumerate(molecule_sdfs):
             with open(molecule_sdf, "r", encoding='utf-8-sig') as sdf:

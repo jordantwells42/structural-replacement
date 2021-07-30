@@ -3,35 +3,43 @@
 ### REQUIRED ###
 
 # Your path to your local installation of Rosetta, e.g. /mnt/c/users/jorda/desktop/software/rosetta
-PathToRosetta =
+PathToRosetta = /mnt/c/users/jorda/desktop/software/rosetta
 
 # Your path to your local installation of PyRosetta, e.g. /mnt/c/users/jorda/desktop/software/pyrosetta
-PathToPyrosetta =
+PathToPyrosetta = /mnt/c/users/jorda/desktop/software/pyrosetta
 
-# The pdb file you wish to use for the protocols e.g. my_enzyme.pdb
-PDBFileName = 
+# The pdb file you wish to use that has the structural feature you want to replace e.g. my_enzyme.pdb
+PrePDBFileName = 
 
-# The number of the residue you wish to map onto, this can be a ligand on a separate chain e.g. 12
+# The pdb file you wish to use that does not have the structural feature you want to replace e.g. my_enzyme.pdb
+PostPDBFileName =
+
+# The residue number of the structural feature you wish to map onto, this can be a ligand or a residue e.g. 12
 ResidueNumber = 
 
 # The chain the previous residue number is on, e.g. A
-ChainLetter = A
+ChainLetter = 
 
 
 ### OPTIONAL ###
 
 # Where to store the generated params and pdb files
-PathToConformers = conformers
+PathToConformers = ./conformers
 
 # What to name the table that is generated
-CSVFileName = Ligands.csv
+CSVFileName = ../Ligands.csv
 
 # What to name the pandas DataFrame that is generated
-PKLFileName = Ligands.pkl
+PKLFileName = ../Ligands.pkl
 
 # If your protein has a ligand and requires .params files, input a space separated list of them here 
 ParamsList = 
 
+# If you have multiple "residues" in your ligand, which one are we mapping onto
+LigandResidueNumber = 1
+
+# Whether to generate atom labels or fill them in yourself
+AutoGenerateAlignment = False
 
 
 [create_table]
@@ -39,14 +47,14 @@ ParamsList =
 ### REQUIRED ###
 
 # Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
-# if they follow a convention 'mol1.sdf mol2.sdf ' then a wild-card (*) can be used 'mol*'
-MoleculeSDFs =  
+# if they follow a convention ' conf1.sdf conf2.sdf ' then a wild-card (*) can be used 'conf*'
+MoleculeSDFs = ./conformers/conf*
 
 
 ### OPTIONAL ###
 
-# Set to True if your SDF files have a comment on the third line with a CAS ID
-UseMoleculeID = False
+# Set to True if your SDF files have a comment on the third line with a CAS ID, scifinder does this
+UseMoleculeID = True
 
 # Set to True if your molecules have no name on the sdf file, uses a simple count instead
 NoName = False
@@ -61,7 +69,7 @@ NoName = False
 BinWidth = 1.0
 
 # By what factor to multiply pauling vdw radii by in the grid calculation e.g. 0.7
-VDW_Modifier = 0.7
+VDW_Modifier = 0.70
 
 # Whether to check collision against just backbone or include side chain atoms
 IncludeSC = False
@@ -73,21 +81,21 @@ IncludeSC = False
 ### REQUIRED ###
 
 # Where your reduced vdm database is located
-VDM_Directory = ../vdm_database
+VDM_Directory = /mnt/c/users/jorda/desktop/vdms
 
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
-# {res_num} A PIKAA {native residue_type, "A" for alanine} in the resfile
+# {res_num} A NATAA in the resfile
 Resfile = 
 
 
 ### OPTIONAL ###
 
 # What to name the outputed vdM score information .pkl file
-OutputFileName = vdm_scored.pkl
+OutputFileName = ../vdm_scored.pkl
 
 # What file stem to base the precalculated info about the vdM space
-VDMSpaceFileStem = VDM-SPACE
+VDMSpaceFileStem = ../VDM-SPACE
 
 # Minimum accepted score for vdMs, 0 is the average
 VDMScoreCutoff = 0
@@ -98,10 +106,30 @@ RMSDCutoff = 1.0
 # Whether to linearly interpolate between 0 and score depending on RMSD
 LERP = False
 
+[rosetta_design]
 
+## REQUIRED ###
 
+# The protein you wish to design against, note this should be pre-relaxed with Rosetta
+DesignPDBFile = ${PostPDBFileName}
 
+# The vdm output file you wish to design against
+DesignPKLFile = ${OutputFileName}
 
+# A resfile defining the mutations and residue changes allowed
+Resfile = foot.resfile
 
+# The residue number of a "focus" residue which is nearby to your structural feature,
+# This is used to define nearby residues as well as where to "anchor" the ligands
+FocusResidueNumber = 881
 
+# The chain the previous residue number is on
+FocusChain = A
 
+### OPTIONAL ###
+
+# How much of a score bonus to give vdM mutations as well as natural sequence positions
+FNRBonus = 1
+
+# How much of an additional score bonus to give to vdM mutations
+VDMBonus = 0.5

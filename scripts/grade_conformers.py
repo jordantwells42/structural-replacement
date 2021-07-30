@@ -9,37 +9,50 @@ import argparse
 
 
 
-def csv_to_df_pkl(csv_file_name, pkl_file_name = None):
-
-    if pkl_file_name == None:
-        pkl_file_name = f"{csv_file_name[:-4]}.pkl"
-
+def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, target_res, lig_res_num):
     df = pd.read_csv(f"{csv_file_name}")
     if len(df.columns) == 5:
         def create_file_stem(name):
             return f"{name}/{name}"
         df["Molecule File Stem"] = df["Molecule ID"].apply(create_file_stem)
 
+    if pkl_file_name == None:
+        pkl_file_name = f"{csv_file_name[:-4]}.pkl"
     def split_crange(name):
-        print(name)
         lst = name.split("_")
-        return [lst[0], lst[1]]
+        return (lst[0], lst[1])
+
+    df["Conformer Range"] = df["Conformer Range"].apply(split_crange)
+
+    if auto:
+        print("Auto Generating Alignments")
+        for i, row in df.iterrows():
+            print(i)
+            print(f"{i+1}/{len(df)}", end = " ")
+            lig = Pose()
+            mol_id = row["Molecule ID"]
+            conf_num = 1
+            res_set = pyrosetta.generate_nonstandard_residue_set(lig, params_list = [f"{path_to_conformers}/{mol_id}/{mol_id}.params"])
+            pyrosetta.pose_from_file(lig, res_set, f"{path_to_conformers}/{mol_id}/{mol_id}_{conf_num:04}.pdb")
+
+            molecule_atoms, target_atoms = alignment.auto_align_residue_to_residue(lig, lig.residue(1), target_res)
+            df.loc[i, "Molecule Atoms"] = "-".join(molecule_atoms)
+            df.loc[i, "Target Atoms"] = "-".join(target_atoms)
+
 
     def split_alabels(name):
         if name == "default":
-            return ["CD2", "CZ2", "CZ3"]
+            return ("CD2", "CZ2", "CZ3")
 
         lst = name.split("-")
-        return [str(e) for e in lst]
-
-    df["Conformer Range"] = df["Conformer Range"].apply(split_crange)
+        return tuple([str(e) for e in lst])
     df["Molecule Atoms"] = df["Molecule Atoms"].apply(split_alabels) 
     df["Target Atoms"] = df["Target Atoms"].apply(split_alabels)
 
     df.to_pickle(pkl_file_name)
 
 def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_file,
-         bin_width = 1, vdw_modifier = 0.7, include_sc = False):
+         bin_width = 1, vdw_modifier = 0.7, include_sc = False, lig_res_num = 1):
     """
     Aligns and then checks for collisions
 
@@ -61,7 +74,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
 
     grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc)
     
-    
+
     all_accepted_all_files = []
     total_confs_all_files = 0
 
@@ -71,8 +84,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     accepted_conformations = []
     every_other = 0
     total_confs = 0
-
-    for pose_info in conformer_prep.yield_ligand_poses(pkl_file = pkl_file, path_to_conformers = path_to_conformers, post_accepted_conformers = False):
+    for pose_info in conformer_prep.yield_ligand_poses(df = df, path_to_conformers = path_to_conformers, post_accepted_conformers = False, ligand_residue = lig_res_num):
         
         if not pose_info:
             print(f"{conf.name}, {conf.id}: {len(accepted_conformations)/conf.conf_num}")
@@ -93,7 +105,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
         if not does_collide:
             accepted_conformations.append(conf.conf_num)
             
-            if every_other % 15 == 0:
+            if every_other % 100000 == 0:
                 conf.pose.pdb_info().name(f"{conf.name}, {conf.id}")
                 pmm.apply(conf.pose)
 
@@ -117,7 +129,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     print(f"Conformers per minute: {total_confs/(tf-t0)*60}")
     
     df["Accepted Conformers"] = all_accepted
-    df.to_pickle("Ligands_1msw.pkl")
+    df.to_pickle(pkl_file)
 
 
 def main(argv):
@@ -137,6 +149,7 @@ def main(argv):
     default = config["DEFAULT"]
     spec = config["grade_conformers"]
     sys.path.append(default["PathToPyRosetta"])
+    auto = default["AutoGenerateAlignment"] == "True"
     
     global pyrosetta, alignment, collision_check, Pose, conformer_prep
 
@@ -151,35 +164,43 @@ def main(argv):
     params_list = default["ParamsList"]
 
     if len(params_list) > 0:
-        pose = Pose()
-        pmm = pyrosetta.PyMOLMover()
-        res_set = pyrosetta.generate_nonstandard_residue_set(pose, params_list = params_list.split(" "))
-        pyrosetta.pose_from_file(pose, res_set, default["PDBFileName"])
-    else:
-        pose = pyrosetta.pose_from_pdb(default["PDBFileName"])
+        pre_pose = Pose()
+        res_set = pyrosetta.generate_nonstandard_residue_set(pre_pose, params_list = params_list.split(" "))
+        pyrosetta.pose_from_file(pre_pose, res_set, default["PrePDBFileName"])
 
-    res = pose.residue(pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"])))
+        post_pose = Pose()
+        res_set = pyrosetta.generate_nonstandard_residue_set(post_pose, params_list = params_list.split(" "))
+        pyrosetta.pose_from_file(post_pose, res_set, default["PostPDBFileName"])
+    else:
+        pre_pose = pyrosetta.pose_from_pdb(default["PrePDBFileName"])
+        post_pose = pyrosetta.pose_from_pdb(default["PostPDBFileName"])
+
+    res = pre_pose.residue(pre_pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"])))
 
 
     path_to_conformers = default["PathToConformers"]
     pkl_file_name = default["PKLFileName"]
+
+    if pkl_file_name.strip() == "":
+        pkl_file_name = None
     print(pkl_file_name)
     bin_width = float(spec["BinWidth"])
     vdw_modifier = float(spec["VDW_Modifier"])
     include_sc = spec["IncludeSC"] == "True"
-
+    lig_res_num = int(default["LigandResidueNumber"])
 
 
     try:
         df = pd.read_pickle(pkl_file_name)
     except:
-        csv_to_df_pkl(default["CSVFileName"], pkl_file_name)
+        csv_to_df_pkl(default["CSVFileName"], pkl_file_name, auto, path_to_conformers, pre_pose, res, lig_res_num)
         df = pd.read_pickle(pkl_file_name)
 
-    align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_file_name, 
-                                        bin_width, vdw_modifier, include_sc)
+    align_to_residue_and_check_collision(post_pose, res, path_to_conformers, df, pkl_file_name, 
+                                        bin_width, vdw_modifier, include_sc, lig_res_num)
 
     
+   
 
 
 

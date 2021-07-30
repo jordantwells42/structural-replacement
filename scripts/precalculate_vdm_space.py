@@ -158,6 +158,7 @@ def resfile_parser(pose, resfile):
 
             if commands == ["NATAA"]:
                 permissible_residues[res_num].append(pose.residue(res_num).name3())
+                continue
 
             if len(commands) > 1:
                 AAs = commands_dict["ALLAA"]
@@ -419,9 +420,9 @@ def main(argv):
         pose = Pose()
         pmm = pyrosetta.PyMOLMover()
         res_set = pyrosetta.generate_nonstandard_residue_set(pose, params_list = params_list.split(" "))
-        pyrosetta.pose_from_file(pose, res_set, default["PDBFileName"])
+        pyrosetta.pose_from_file(pose, res_set, default["PostPDBFileName"])
     else:
-        pose = pyrosetta.pose_from_pdb(default["PDBFileName"])
+        pose = pyrosetta.pose_from_pdb(default["PostPDBFileName"])
 
     resfile = spec["Resfile"]
     vdm_space_file_stem = spec["VDMSpaceFileStem"]
