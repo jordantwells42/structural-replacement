@@ -72,8 +72,10 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     pmm = pyrosetta.PyMOLMover()
     pmm.keep_history(True)
 
-    grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc)
-    
+
+    excluded_residues = [pose.pdb_info().pdb2pose("A", e) for e in [882, 883]]
+    grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc, excluded_residues = excluded_residues)
+
 
     all_accepted_all_files = []
     total_confs_all_files = 0
@@ -105,7 +107,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
         if not does_collide:
             accepted_conformations.append(conf.conf_num)
             
-            if every_other % 100000 == 0:
+            if every_other % 25 == 0:
                 conf.pose.pdb_info().name(f"{conf.name}, {conf.id}")
                 pmm.apply(conf.pose)
 

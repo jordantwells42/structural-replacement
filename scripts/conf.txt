@@ -9,22 +9,22 @@ PathToRosetta = /mnt/c/users/jorda/desktop/software/rosetta
 PathToPyrosetta = /mnt/c/users/jorda/desktop/software/pyrosetta
 
 # The pdb file you wish to use that has the structural feature you want to replace e.g. my_enzyme.pdb
-PrePDBFileName = 
+PrePDBFileName = path/to/file.pdb
 
-# The pdb file you wish to use that does not have the structural feature you want to replace e.g. my_enzyme.pdb
-PostPDBFileName =
+# The pdb file you wish to use that does not have the structural feature you want to replace e.g. my_enzyme_W100G.pdb
+PostPDBFileName = path/to/file_W100G.pdb
 
 # The residue number of the structural feature you wish to map onto, this can be a ligand or a residue e.g. 12
-ResidueNumber = 
+ResidueNumber = 727
 
 # The chain the previous residue number is on, e.g. A
-ChainLetter = 
+ChainLetter = A
 
 
 ### OPTIONAL ###
 
 # Where to store the generated params and pdb files
-PathToConformers = ./conformers
+PathToConformers = ../conformers
 
 # What to name the table that is generated
 CSVFileName = ../Ligands.csv
@@ -35,10 +35,10 @@ PKLFileName = ../Ligands.pkl
 # If your protein has a ligand and requires .params files, input a space separated list of them here 
 ParamsList = 
 
-# If you have multiple "residues" in your ligand, which one are we mapping onto
+# If you have multiple "residues" in your ligand, which one are we mapping onto (rare)
 LigandResidueNumber = 1
 
-# Whether to generate atom labels or fill them in yourself
+# Whether to generate atom labels or fill them in yourself (False is reccommended)
 AutoGenerateAlignment = False
 
 
@@ -48,7 +48,7 @@ AutoGenerateAlignment = False
 
 # Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
 # if they follow a convention ' conf1.sdf conf2.sdf ' then a wild-card (*) can be used 'conf*'
-MoleculeSDFs = ./conformers/conf*
+MoleculeSDFs = ../conformers/conf*
 
 
 ### OPTIONAL ###
@@ -81,7 +81,7 @@ IncludeSC = False
 ### REQUIRED ###
 
 # Where your reduced vdm database is located
-VDM_Directory = /mnt/c/users/jorda/desktop/vdms
+VDM_Directory = ../vdm_database
 
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
