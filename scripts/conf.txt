@@ -9,10 +9,10 @@ PathToRosetta = /mnt/c/users/jorda/desktop/software/rosetta
 PathToPyrosetta = /mnt/c/users/jorda/desktop/software/pyrosetta
 
 # The pdb file you wish to use that has the structural feature you want to replace e.g. my_enzyme.pdb
-PrePDBFileName = path/to/file.pdb
+PrePDBFileName = ../structures/1msw_relax_no_dna.pdb
 
 # The pdb file you wish to use that does not have the structural feature you want to replace e.g. my_enzyme_W100G.pdb
-PostPDBFileName = path/to/file_W100G.pdb
+PostPDBFileName = ../structures/1msw_relax_W727G.pdb
 
 # The residue number of the structural feature you wish to map onto, this can be a ligand or a residue e.g. 12
 ResidueNumber = 727
@@ -86,7 +86,7 @@ VDM_Directory = ../vdm_database
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
 # {res_num} A NATAA in the resfile
-Resfile = 
+Resfile = designable.resfile
 
 
 ### OPTIONAL ###
@@ -111,13 +111,14 @@ LERP = False
 ## REQUIRED ###
 
 # The protein you wish to design against, note this should be pre-relaxed with Rosetta
-DesignPDBFile = ${PostPDBFileName}
+# Should usually be the same as PostPDBFileName
+DesignPDBFile = ../structures/1msw_relax_W727G.pdb
 
 # The vdm output file you wish to design against
-DesignPKLFile = ${OutputFileName}
+DesignPKLFile = ../vdm_scored.pkl
 
 # A resfile defining the mutations and residue changes allowed
-Resfile = foot.resfile
+Resfile = designable.resfile
 
 # The residue number of a "focus" residue which is nearby to your structural feature,
 # This is used to define nearby residues as well as where to "anchor" the ligands
