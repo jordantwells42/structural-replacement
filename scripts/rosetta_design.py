@@ -1,11 +1,4 @@
 import sys
-sys.path.append('/mnt/c/Users/jorda/Desktop/Software/PyRosetta')
-from pyrosetta import *
-from pyrosetta.rosetta import *
-from pyrosetta.rosetta.core.scoring import *
-from alignment import *
-from pyrosetta.rosetta.core.select.movemap import *
-
 from configparser import ConfigParser
 import argparse
 
@@ -13,7 +6,7 @@ import pandas as pd
 
 
 def prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations):
-    complx = Pose()
+    complx = pyrosetta.Pose()
     complx.assign(pose)
 
     vrm = pyrosetta.rosetta.protocols.simple_moves.VirtualRootMover()
@@ -32,8 +25,8 @@ def prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations):
     ccg = pyrosetta.rosetta.protocols.constraint_generator.CoordinateConstraintGenerator()
     ccg.set_residue_selector(lig_pos)
     ccg.set_sidechain(True)
-    ccg.set_bounded_width(0.1)
-    ccg.set_sd(0.1)
+    ccg.set_bounded_width(0.25)
+    ccg.set_sd(0.5)
     ccg.apply(complx)
 
     return complx
@@ -50,30 +43,34 @@ def determine_mutations(pose, mutation_string):
 
 def design(pose, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus, rtc_bonus):
     
-    # Set up score function
-    sf= pyrosetta.create_score_function("ref2015_cart.wts")
+    # SET UP SCORE FUNCTION
+    sf= pyrosetta.get_fa_scorefxn()
     unsat_penalty = 0.0025
-    sf.set_weight(res_type_constraint, 1.0)
-    sf.set_weight(buried_unsatisfied_penalty, unsat_penalty)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 1.0)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.coordinate_constraint, 1.0)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, unsat_penalty)
 
-    # Set up score bonuses
+
+    # SET UP SCORE BONUSES
     fnr = pyrosetta.rosetta.protocols.protein_interface_design.FavorNativeResidue(pose, fnr_bonus)
 
-    print(vdm_positions)
     for position in vdm_positions:
-        rtc = core.scoring.constraints.ResidueTypeConstraint(pose, position, rtc_bonus)
+        rtc = pyrosetta.rosetta.core.scoring.constraints.ResidueTypeConstraint(pose, position, rtc_bonus)
         pose.add_constraint(rtc)
 
-    # Set up task factory
-    tf = core.pack.task.TaskFactory()
-    tf.push_back(core.pack.task.operation.InitializeFromCommandline())
-    tf.push_back(core.pack.task.operation.IncludeCurrent())
-    tf.push_back(core.pack.task.operation.NoRepackDisulfides())
-    tf.push_back(core.pack.task.operation.ReadResfile(resfile))
+
+    # SET UP TASK FACTORY
+    tf = pyrosetta.rosetta.core.pack.task.TaskFactory()
+    tf.push_back(pyrosetta.rosetta.core.pack.task.operation.InitializeFromCommandline())
+    tf.push_back(pyrosetta.rosetta.core.pack.task.operation.IncludeCurrent())
+    tf.push_back(pyrosetta.rosetta.core.pack.task.operation.NoRepackDisulfides())
+    tf.push_back(pyrosetta.rosetta.core.pack.task.operation.ReadResfile(resfile))
     
+
+    # SET UP NEIGHBORHOOD RESIDUES and JUMP
     focus_pos = pyrosetta.rosetta.core.select.residue_selector.ResidueIndexSelector()
     focus_pos.set_index(focus_seqpos)
-    nbr = rosetta.core.select.residue_selector.NeighborhoodResidueSelector()
+    nbr = pyrosetta.rosetta.core.select.residue_selector.NeighborhoodResidueSelector()
     nbr.set_distance(12)
     nbr.set_focus_selector(focus_pos)
     nbr.set_include_focus_in_subset(True)
@@ -81,33 +78,33 @@ def design(pose, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, c
     pose.update_residue_neighbors()
     nbr.apply(pose)
     rlt = pyrosetta.rosetta.core.pack.task.operation.PreventRepackingRLT()
-    tf.push_back(core.pack.task.operation.OperateOnResidueSubset(rlt, nbr, True))
+    tf.push_back(pyrosetta.rosetta.core.pack.task.operation.OperateOnResidueSubset(rlt, nbr, True))
 
-    # Set up movemap
-    packer_task = tf.create_task_and_apply_taskoperations(pose)
     jump_num = pose.num_jump()
-
-
-    mmf = MoveMapFactory()
     jump_selector = pyrosetta.rosetta.core.select.jump_selector.JumpIndexSelector()
     jump_selector.jump(jump_num)
 
+
+    # SET UP MOVEMAP
+    mmf = pyrosetta.rosetta.core.select.movemap.MoveMapFactory()
     mmf.add_chi_action(pyrosetta.rosetta.core.select.movemap.mm_enable, nbr)
     mmf.add_jump_action(pyrosetta.rosetta.core.select.movemap.mm_enable, jump_selector)
 
-    # Set up FastRelax
+
+    # SET UP FASTRELAX
     fr = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn_in = sf, standard_repeats = 3)
     fr.set_task_factory(tf)
     fr.set_movemap_factory(mmf)
+    fr.ramp_down_constraints(False)
     fr.min_type('lbfgs_armijo_nonmonotone')
     fr.max_iter(200)
     
     # Apply FastRelax
-    fr.apply(pose)
+    #fr.apply(pose)
 
 
     # Minimization without the buried unsatisfied penalty, recc. by Vmulligan
-    sf.set_weight(buried_unsatisfied_penalty, 0.0)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, 0.0)
 
     mm = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
     mm.score_function(sf)
@@ -116,11 +113,11 @@ def design(pose, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, c
 
 
     # Analyzing interface
-    sf.set_weight(res_type_constraint, 0.0)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.coordinate_constraint, 0.0)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 0.0)
 
     interface_analyzer = pyrosetta.rosetta.protocols.analysis.InterfaceAnalyzerMover(jump_num)
     interface_analyzer.set_scorefunction(sf)
-    interface_analyzer.set_pack_input(True)
     interface_analyzer.set_pack_separated(True)
     interface_analyzer.set_pack_rounds(3)
     interface_analyzer.set_compute_interface_sc(True)
@@ -200,6 +197,8 @@ def main(argv):
     print("Grabbing info from config file")
     params_list = default["ParamsList"]
     path_to_conformers = default["PathToConformers"]
+    path_to_complexes = spec["PathToComplexes"]
+
     resfile = spec["Resfile"]
     fnr_bonus = float(spec["FNRBonus"])
     vdm_bonus = float(spec["VDMBonus"])
@@ -220,32 +219,32 @@ def main(argv):
     res = pre_pose.residue(pre_pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"])))
 
 
-    focus_pos = post_pose.pdb_info().pdb2pose(spec["FocusChain"], spec["FocusResidueNumber"])
+    focus_pos = pre_pose.pdb_info().pdb2pose(spec["FocusChain"], int(spec["FocusResidueNumber"]))
     
     new_df = []
     df = pd.read_pickle(pkl_file)
 
-    print("\n\n\n\nBeginning Design\n\n\n\n")
+    print("\n\nBeginning Design\n\n")
     score_type = "Norm. Score"
     df = df.sort_values(score_type, ascending = False).drop_duplicates(["Molecule ID"], keep = "first")
     
 
-    for i, molecule_df in df[0:100].iterrows():    
+    for i, molecule_df in df.iterrows():    
         print("\n\nPreparing pose for design")
-        pose = pose_from_pdb(spec["DesignPDBFile"])
+        pose = pyrosetta.pose_from_pdb(spec["DesignPDBFile"])
         ref_seq = pose.sequence()
 
         mol_id, conf_num, file_stem, lig_aid, r_aid, mutation_string, vdm_positions = molecule_df[[
         "Molecule ID", "Conformer Number", "Molecule File Stem", "Molecule Atoms", "Target Atoms",
         "Mutations", "Positions"]]
 
-        print(f"{mol_id}, {conf_num}\n")
+        print(f"{mol_id}, {conf_num}")
 
         lig = Pose()
         res_set = pyrosetta.generate_nonstandard_residue_set(lig, params_list = [f"{path_to_conformers}/{file_stem}.params"])
-        pose_from_file(lig, res_set, f"{path_to_conformers}/{file_stem}_{conf_num:04}.pdb")
+        pyrosetta.pose_from_file(lig, res_set, f"{path_to_conformers}/{file_stem}_{conf_num:04}.pdb")
 
-        align_ligand_to_residue(lig, res, lig_aid, r_aid)
+        alignment.align_ligand_to_residue(lig, res, lig_aid, r_aid)
 
         vdm_mutations = determine_mutations(pose, mutation_string)
 
@@ -257,14 +256,12 @@ def main(argv):
 
 
         new_df.append(list(molecule_df[:-2]) + [mutations, all_mutations, SC, IFE, dSASA, ddG, dG_dSASA_ratio, num_buns])
-        out_pose.dump_pdb(f"../complexes/{mol_id}_{conf_num:04}.pdb")
+        out_pose.dump_pdb(f"{path_to_complexes}/{mol_id}_{conf_num:04}.pdb")
+
 
     new_df = pd.DataFrame(new_df)
-    new_df.columns = ["Molecule Name", "Molecule ID", "Molecule File Stem", "Conformer Number", "Molecule Atoms", "Target Atoms", 
-                          "vdM Score", "Norm. Score", "Num. vdMs",  "Sat. by vdM", "Sat. by Solvent", "Unsat.", "vdM Mutations",
-                          "Mutations", "All Mutations", "SC", "IFE", "dSASA", "ddG", "dG/dSASA", "BUNs"]
-
-    new_df.to_pickle("../complexes.pkl")
+    new_df.columns = list(df.columns)[:-2] + ["Pose Numbered Mutations", "All Mutations", "SC", "IFE", "dSASA", "ddG", "dG/dSASA", "BUNs"]
+    new_df.to_pickle(f"{path_to_complexes}/complex_scores.pkl")
 
 
 

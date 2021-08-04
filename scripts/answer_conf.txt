@@ -3,24 +3,24 @@
 ### REQUIRED ###
 
 # Your path to your local installation of Rosetta, e.g. /mnt/c/users/jorda/desktop/software/rosetta
-PathToRosetta = 
+PathToRosetta = /mnt/c/users/jorda/desktop/software/rosetta
 
 # Your path to your local installation of PyRosetta, e.g. /mnt/c/users/jorda/desktop/software/pyrosetta
-PathToPyrosetta = 
+PathToPyrosetta = /mnt/c/users/jorda/desktop/software/pyrosetta
 
 # Your unmodified pdb file e.g. my_enzyme.pdb
-PrePDBFileName = 
+PrePDBFileName = ../structures/5i3d.pdb
 
 # Your pdb file after it has been modified by a mutation, deletion whatever it may be 
 # that is going to be replaced by a ligand e.g. my_enzyme_W100G.pdb
-PostPDBFileName = 
+PostPDBFileName = ../structures/5i3d_W33G.pdb
 
 # The residue number of the structural feature you wish to map onto, this can be a 
 # ligand (if so the number would likely be 1) or a residue e.g. 12
-ResidueNumber = 
+ResidueNumber = 33
 
 # The chain the previous residue number is on, e.g. A
-ChainLetter = 
+ChainLetter = A
 
 
 ### OPTIONAL ###
@@ -45,14 +45,13 @@ LigandResidueNumber = 1
 AutoGenerateAlignment = False
 
 
-
 [create_table]
 
 ### REQUIRED ###
 
 # Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
 # if they follow a convention ' conf1.sdf conf2.sdf ' then a wild-card (*) can be used 'conf*'
-MoleculeSDFs =
+MoleculeSDFs = ../indole.sdf ../phenol.sdf
 
 
 ### OPTIONAL ###
@@ -62,7 +61,6 @@ UseMoleculeID = True
 
 # Set to True if your molecules have no name on the sdf file, uses a simple count instead
 NoName = False
-
 
 
 
@@ -78,7 +76,6 @@ VDW_Modifier = 0.70
 
 # Whether to check collision against just backbone or include side chain atoms
 IncludeSC = False
-
 
 
 
@@ -115,15 +112,13 @@ LERP = False
 # Whether to approximate functional groups (e.g. approximate ethers as thioethers)
 Bioisostere = False
 
-
-
 [rosetta_design]
 
 ## REQUIRED ###
 
 # The protein you wish to design against, note this should be pre-relaxed with Rosetta
 # Should usually be the same as PostPDBFileName
-DesignPDBFile = ../5i3d_W33G.pdb
+DesignPDBFile = ../structures/5i3d_W33G.pdb
 
 # The vdm output file you wish to design against
 DesignPKLFile = ../vdm_scored.pkl
@@ -137,7 +132,6 @@ FocusResidueNumber = 33
 
 # The chain the previous residue number is on
 FocusChain = A
-
 
 ### OPTIONAL ###
 

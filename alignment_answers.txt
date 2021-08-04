@@ -1,0 +1,7 @@
+Indole:
+	Molecule Atoms: C1-C5-C7
+	Target Atoms: CD2-CZ2-CZ3
+
+Phenol:
+	Molecule Atoms: C4-C1-C5
+	Target Atoms: CD2-CZ2-CZ3

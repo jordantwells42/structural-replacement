@@ -86,7 +86,7 @@ def determine_vdm_set(possibilities, num_fgs):
     return vdm_set, position_residues, total_score, satisfied
 
 
-def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conformers, df_file_name, pkl_file, vdm_file_stem, rmsd_cutoff = 1.0, lerp = False):
+def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conformers, df_file_name, pkl_file, vdm_file_stem, rmsd_cutoff = 1.0, lerp = False, bioisostere = False):
     """
     Aligns ligands from pkl files to a certain residue, finds their vdM score based off the vdm space generated from
     precalculate_vdw_space, and outputs info into a pkl file database named df_file_name
@@ -135,7 +135,7 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
         conf.align_to_target(res)
         ligand_grid = collision_check.CollisionGrid(conf.pose, bin_width = 0.5, vdw_modifier = 0.5, include_sc = True)
         #print(ligand_grid.grid)
-        fgs = conf.determine_functional_groups(bioisostere = False)
+        fgs = conf.determine_functional_groups(bioisostere = bioisostere)
         
         possibilities = defaultdict(list)
         for i, (group_name, atomnos, coords) in enumerate(fgs):
@@ -344,10 +344,11 @@ def main(argv):
     output_file_name = spec["OutputFileName"]
     rmsd_cutoff = spec["RMSDCutoff"]
     lerp = spec["LERP"] == "True"
+    bioisostere = spec["Bioisostere"] == "True"
 
 
     align_ligands_to_residue_and_score_from_generator(post_pose, res, path_to_conformers,  output_file_name, 
-                                                        pkl_file_name, vdm_space_file_stem, rmsd_cutoff, lerp)
+                                                        pkl_file_name, vdm_space_file_stem, rmsd_cutoff, lerp, bioisostere)
 
     
 if __name__ == "__main__":
