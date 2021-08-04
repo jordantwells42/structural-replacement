@@ -18,7 +18,7 @@ Conversion notes:
 * Source doc: Running the Scripts
 * Tables are currently converted to HTML tables.
 ----->
-*structural alignment*
+### Structural Replacement ###
 
 This document will guide you through how to run the structural_replacement scripts for your project:
 
@@ -53,7 +53,7 @@ The config file contains all of the information needed for the scripts to run.
 
 Information in the [DEFAULT] category is used by all scripts, and each script has its own respective category.
 
-_REQUIRED _options need to be filled in to fit your own specific project’s needs, while ### OPTIONAL ### options do NOT need to be filled in and can be left as is. The default settings in the optional options are what I have found to work the best. 
+_REQUIRED_ options need to be filled in to fit your own specific project’s needs, while _OPTIONAL_ options do NOT need to be filled in and can be left as is. The default settings in the optional options are what I have found to work the best. 
 
 Additionally, a lot of the options in the config files are _paths_ to locations on your computer. Importantly these paths are in relation to where your scripts are located, NOT the config file. 
 
