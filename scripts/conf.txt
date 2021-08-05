@@ -2,9 +2,6 @@
 
 ### REQUIRED ###
 
-# Your path to your local installation of Rosetta, e.g. /mnt/c/users/jorda/desktop/software/rosetta
-PathToRosetta = 
-
 # Your path to your local installation of PyRosetta, e.g. /mnt/c/users/jorda/desktop/software/pyrosetta
 PathToPyrosetta = 
 
@@ -87,12 +84,12 @@ IncludeSC = False
 ### REQUIRED ###
 
 # Where your reduced vdm database is located
-VDM_Directory = ../vdm_database
+VDM_Directory = 
 
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
 # {res_num} A NATAA in the resfile
-Resfile = designable.resfile
+Resfile = 
 
 
 ### OPTIONAL ###
@@ -123,9 +120,10 @@ Bioisostere = False
 
 # The protein you wish to design against, note this should be pre-relaxed with Rosetta
 # Should usually be the same as PostPDBFileName
-DesignPDBFile = ../5i3d_W33G.pdb
+DesignPDBFile = 
 
 # The vdm output file you wish to design against
+# Should usually be the same as the vdm Out
 DesignPKLFile = ../vdm_scored.pkl
 
 # A resfile defining the mutations and residue changes allowed
@@ -133,10 +131,11 @@ Resfile = designable.resfile
 
 # The residue number of a "focus" residue which is nearby to your structural feature,
 # This is used to define nearby residues as well as where to "anchor" the ligands
-FocusResidueNumber = 33
+# Usually just the same residue you mutate
+FocusResidueNumber =
 
 # The chain the previous residue number is on
-FocusChain = A
+FocusChain =
 
 
 ### OPTIONAL ###
