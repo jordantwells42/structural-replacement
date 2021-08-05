@@ -220,7 +220,7 @@ def align_ligands_to_residue_and_score_from_generator(pose, res, path_to_conform
         big_df[score] -= mean
         big_df[score] /= std
 
-    big_df.to_pickle(df_file_name)
+    big_df.to_pickle(df_file_name, protocol = 4)
     print(f"Completed evaluating ligands, time taken {(time.time() - t0) / 60} minutes")
 
 

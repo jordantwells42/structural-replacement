@@ -310,7 +310,7 @@ def precalculate_vdm_space(pose, resfile, pkl_file_stem, score_cutoff = 0):
         print(f"\nStarted {vdm_name}")
         t0 = time.time()
         for residue in residues:
-            parent_df = pd.read_pickle(f"{VDM_DIR}/core_vdms/{vdm_name}/{residue}.pkl")
+            parent_df = pd.read_pickle(f"{VDM_DIR}/vdms/{vdm_name}/{residue}.gz")
 
             gpdf = parent_df.groupby(["cluster_number", "ABPLE"])
 
@@ -379,9 +379,9 @@ def precalculate_vdm_space(pose, resfile, pkl_file_stem, score_cutoff = 0):
         print(f"Completed {vdm_name}, time taken: {(time.time() - t0)/60} minutes")
 
     with open(f"{pkl_file_stem}-trees.pkl", "wb+") as t, open(f"{pkl_file_stem}-info.pkl", "wb+") as i, open(f"{pkl_file_stem}-coords.pkl", "wb+") as c:
-        pickle.dump(trees, t)
-        pickle.dump(corresponding_info, i)
-        pickle.dump(vdm_coords, c)
+        pickle.dump(trees, t, protocol = 4)
+        pickle.dump(corresponding_info, i, protocol = 4)
+        pickle.dump(vdm_coords, c, protocol = 4)
 
 def main(argv):
     t0 = time.time()

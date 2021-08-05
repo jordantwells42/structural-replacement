@@ -49,7 +49,7 @@ def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, 
     df["Molecule Atoms"] = df["Molecule Atoms"].apply(split_alabels) 
     df["Target Atoms"] = df["Target Atoms"].apply(split_alabels)
 
-    df.to_pickle(pkl_file_name)
+    df.to_pickle(pkl_file_name, protocol = 4)
 
 def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_file,
          bin_width = 1, vdw_modifier = 0.7, include_sc = False, lig_res_num = 1):
@@ -131,7 +131,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     print(f"Conformers per minute: {total_confs/(tf-t0)*60}")
     
     df["Accepted Conformers"] = all_accepted
-    df.to_pickle(pkl_file)
+    df.to_pickle(pkl_file, protocol = 4)
 
 
 def main(argv):
