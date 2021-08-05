@@ -29,7 +29,6 @@ You do not need to know how to use any of the following, but they will be requir
 
 * Python 3.8++
 * A local installation of PyRosetta
-* A local installation of Rosetta (to use molfile_to_params script)
 * The following Python Libraries (these can be installed in a terminal by typing “pip install lib-name”, more info can be found here [https://pypi.org/project/pip/](https://pypi.org/project/pip/))
     * [numpy](https://numpy.org/) - very useful for math operations
     * [pandas](https://pandas.pydata.org/) - allows the use of the DataFrame, which is essentially a powerful spreadsheet/table
