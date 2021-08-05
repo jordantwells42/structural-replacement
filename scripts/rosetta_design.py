@@ -5,7 +5,7 @@ import argparse
 import pandas as pd
 
 
-def prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations):
+def prepare_pose_for_design(pose, focus_pos, lig, lig_aid):
     complx = pyrosetta.Pose()
     complx.assign(pose)
 
@@ -14,10 +14,6 @@ def prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations):
 
     complx.append_residue_by_jump(lig.residue(1), focus_pos, "", "", True)
     
-    for position, residue in vdm_mutations:
-        pyrosetta.toolbox.mutants.mutate_residue(complx, position, residue)
-
-
 
     lig_pos = pyrosetta.rosetta.core.select.residue_selector.ResidueIndexSelector()
     lig_pos.set_index(complx.size())
@@ -31,6 +27,15 @@ def prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations):
 
     return complx
 
+def make_mutations(pose, vdm_mutations):
+    complx = Pose()
+    complx.assign(pose)
+    for position, residue in vdm_mutations:
+        pyrosetta.toolbox.mutants.mutate_residue(complx, position, residue)
+    return complx
+
+
+
 
 def determine_mutations(pose, mutation_string):
     if mutation_string == "WT":
@@ -41,7 +46,7 @@ def determine_mutations(pose, mutation_string):
 
     return [(pose.pdb_info().pdb2pose("A", pos), res) for pos, res in pos_res]
 
-def design(pose, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus, rtc_bonus):
+def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus, rtc_bonus):
     
     # SET UP SCORE FUNCTION
     sf= pyrosetta.get_fa_scorefxn()
@@ -100,11 +105,15 @@ def design(pose, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, c
     fr.max_iter(200)
     
     # Apply FastRelax
-    #fr.apply(pose)
+    fr.apply(pose)
 
 
     # Minimization without the buried unsatisfied penalty, recc. by Vmulligan
     sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, 0.0)
+
+    revert = pyrosetta.rosetta.protocols.protein_interface_design.Revert(sf, 0)
+    revert.apply(pose_wt, pose)
+
 
     mm = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
     mm.score_function(sf)
@@ -248,12 +257,13 @@ def main(argv):
 
         vdm_mutations = determine_mutations(pose, mutation_string)
 
-        pose_to_design = prepare_pose_for_design(pose, focus_pos, lig, lig_aid, vdm_mutations)
+        pose_with_ligand = prepare_pose_for_design(pose, focus_pos, lig, lig_aid)
+
+        pose_to_design = make_mutations(pose_with_ligand, vdm_mutations)
         
         conf_id = f"{mol_id}_{conf_num}"
 
-        out_pose, all_mutations, mutations, SC, IFE, dSASA, ddG, dG_dSASA_ratio, num_buns = design(pose_to_design, focus_pos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus = fnr_bonus, rtc_bonus = vdm_bonus)
-
+        out_pose, all_mutations, mutations, SC, IFE, dSASA, ddG, dG_dSASA_ratio, num_buns = design(pose_to_design, pose_with_ligand, focus_pos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus = fnr_bonus, rtc_bonus = vdm_bonus)
 
         new_df.append(list(molecule_df[:-2]) + [mutations, all_mutations, SC, IFE, dSASA, ddG, dG_dSASA_ratio, num_buns])
         out_pose.dump_pdb(f"{path_to_complexes}/{mol_id}_{conf_num:04}.pdb")

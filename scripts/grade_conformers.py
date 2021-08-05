@@ -22,6 +22,7 @@ def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, 
         lst = name.split("_")
         return (lst[0], lst[1])
 
+    print(df)
     df["Conformer Range"] = df["Conformer Range"].apply(split_crange)
 
     if auto:
