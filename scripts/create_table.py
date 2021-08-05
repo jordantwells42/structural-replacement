@@ -90,8 +90,6 @@ def main(argv):
     config.read(args.config_file)
     default = config["DEFAULT"]
     spec = config["create_table"]
-    ptr = "PathToRosetta"
-    sys.path.append(f"{default[ptr]}/main/source/scripts/python/public")
 
     import molfile_to_params as mtp
 
