@@ -10,7 +10,7 @@ import argparse
 
 
 def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, target_res, lig_res_num):
-    df = pd.read_csv(f"{csv_file_name}")
+    df = pd.read_csv(f"{csv_file_name}", index_col = False)
     if len(df.columns) == 5:
         def create_file_stem(name):
             return f"{name}/{name}"
