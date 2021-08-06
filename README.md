@@ -40,7 +40,7 @@ You do not need to know how to use any of the following, but they will be requir
     * [pandas](https://pandas.pydata.org/) - allows the use of the DataFrame, which is essentially a powerful spreadsheet/table
     * [Sklearn](https://scikit-learn.org/stable/) - allows use of a nearest neighbors implementation, only needed if using vdMs
     * [ProDy](http://prody.csb.pitt.edu/) - used to create pdb files of vdMs, again only needed if using vdMs
-* If you are using vdMs, an installation of a reduced subset of the vdM database (&lt;2 gb)
+* If you are using vdMs, an installation of a reduced subset of the vdM database (~300 mb)
 
 
 
