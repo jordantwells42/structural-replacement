@@ -22,9 +22,12 @@ Conversion notes:
 
 This document will guide you through how to run the structural_replacement scripts for your project. A more detailed tutorial can be found here [https://docs.google.com/document/d/1NEq-mbIoxclpstKW4C55wvxyhdNPPFbA7jrmUidYLdk/edit?usp=sharing]
 
-**Acknowledgements**
+\
+**Acknowledgements:**
+
 Thanks to [Nick Polizzi](https://github.com/npolizzi) for creating the [van der Mer structural unit](https://science.sciencemag.org/content/369/6508/1227) and providing access to the vdM database.
 
+\
 **Prerequisites:**
 
 You do not need to know how to use any of the following, but they will be required by the scripts in order to run
@@ -39,6 +42,9 @@ You do not need to know how to use any of the following, but they will be requir
     * [ProDy](http://prody.csb.pitt.edu/) - used to create pdb files of vdMs, again only needed if using vdMs
 * If you are using vdMs, an installation of a reduced subset of the vdM database (&lt;2 gb)
 
+
+
+\
 **General Usage:**
 
 Each script is ran with the path to the config file as an argument, such as 
@@ -48,7 +54,7 @@ Each script is ran with the path to the config file as an argument, such as
 run a_script.py path/to/conf.txt
 ```
 
-
+\
 **Config File:**
 
 The config file contains all of the information needed for the scripts to run.
@@ -59,6 +65,7 @@ _REQUIRED_ options need to be filled in to fit your own specific project’s nee
 
 Additionally, a lot of the options in the config files are _paths_ to locations on your computer. Importantly these paths are in relation to where your scripts are located, NOT the config file. 
 
+\
 **Running the Scripts:**
 
 Once the config file has been set up with all of the necessary information. The necessary commands and a brief outline of what each script does is outlined below. If you would like more information on what each script does or how to use them, that can be found **[here](https://docs.google.com/document/d/1NEq-mbIoxclpstKW4C55wvxyhdNPPFbA7jrmUidYLdk/edit?usp=sharing)**. 
