@@ -10,21 +10,33 @@ import argparse
 
 
 def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, target_res, lig_res_num):
-    df = pd.read_csv(f"{csv_file_name}", index_col = False)
-    if len(df.columns) == 5:
-        def create_file_stem(name):
-            return f"{name}/{name}"
-        df["Molecule File Stem"] = df["Molecule ID"].apply(create_file_stem)
+    """
+    Automatically converts the CSV made by create_table into a DataFrame with all of the necessary
+    information
 
+    Creates a lot of helper functions to do so as required by Pandas
+
+    """
+    df = pd.read_csv(f"{csv_file_name}", index_col = False)
     if pkl_file_name == None:
         pkl_file_name = f"{csv_file_name[:-4]}.pkl"
+
+    # Creating the "file stem", the location of where the ligands are
+    def create_file_stem(name):
+        return f"{name}/{name}"
+    
+    df["Molecule File Stem"] = df["Molecule ID"].apply(create_file_stem)
+
+
+    # Turning the conformer range into a tuple
     def split_crange(name):
         lst = name.split("_")
         return (lst[0], lst[1])
 
-    print(df)
     df["Conformer Range"] = df["Conformer Range"].apply(split_crange)
 
+
+    # Auto generating alignments if specified to do so
     if auto:
         print("Auto Generating Alignments")
         for i, row in df.iterrows():
@@ -36,20 +48,24 @@ def csv_to_df_pkl(csv_file_name, pkl_file_name, auto, path_to_conformers, pose, 
             res_set = pyrosetta.generate_nonstandard_residue_set(lig, params_list = [f"{path_to_conformers}/{mol_id}/{mol_id}.params"])
             pyrosetta.pose_from_file(lig, res_set, f"{path_to_conformers}/{mol_id}/{mol_id}_{conf_num:04}.pdb")
 
-            molecule_atoms, target_atoms = alignment.auto_align_residue_to_residue(lig, lig.residue(1), target_res)
+            molecule_atoms, target_atoms = alignment.auto_align_residue_to_residue(lig, lig.residue(lig_res_num), target_res)
             df.loc[i, "Molecule Atoms"] = "-".join(molecule_atoms)
             df.loc[i, "Target Atoms"] = "-".join(target_atoms)
 
 
+    # Turning molecule and target atoms into tuples
     def split_alabels(name):
         if name == "default":
             return ("CD2", "CZ2", "CZ3")
 
         lst = name.split("-")
         return tuple([str(e) for e in lst])
+
     df["Molecule Atoms"] = df["Molecule Atoms"].apply(split_alabels) 
     df["Target Atoms"] = df["Target Atoms"].apply(split_alabels)
 
+
+    # Serializing the resultant DataFrame
     df.to_pickle(pkl_file_name, protocol = 4)
 
 def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_file,
@@ -73,9 +89,8 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     pmm = pyrosetta.PyMOLMover()
     pmm.keep_history(True)
 
-
-    excluded_residues = [pose.pdb_info().pdb2pose("A", e) for e in [882, 883]]
-    grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc, excluded_residues = excluded_residues)
+    # Precalculating the protein collision grid and storing the results in a hashmap (grid.grid)
+    grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc)
 
 
     all_accepted_all_files = []
@@ -87,6 +102,8 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     accepted_conformations = []
     every_other = 0
     total_confs = 0
+
+
     for pose_info in conformer_prep.yield_ligand_poses(df = df, path_to_conformers = path_to_conformers, post_accepted_conformers = False, ligand_residue = lig_res_num):
         
         if not pose_info:
@@ -95,6 +112,7 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
             accepted_conformations = []
             continue
 
+        # Grab the conformer from the generator
         conf = pose_info
         
         # Perform alignment
@@ -166,6 +184,8 @@ def main(argv):
 
     params_list = default["ParamsList"]
 
+    # Reading in Pre and Post PDBs
+    print("Reading in Pre and Post PDBs")
     if len(params_list) > 0:
         pre_pose = Pose()
         res_set = pyrosetta.generate_nonstandard_residue_set(pre_pose, params_list = params_list.split(" "))
@@ -178,9 +198,11 @@ def main(argv):
         pre_pose = pyrosetta.pose_from_pdb(default["PrePDBFileName"])
         post_pose = pyrosetta.pose_from_pdb(default["PostPDBFileName"])
 
+    # Defining the residue to align to
     res = pre_pose.residue(pre_pose.pdb_info().pdb2pose(default["ChainLetter"], int(default["ResidueNumber"])))
 
 
+    # Reading in information from the config file
     path_to_conformers = default["PathToConformers"]
     pkl_file_name = default["PKLFileName"]
 
@@ -192,21 +214,20 @@ def main(argv):
     include_sc = spec["IncludeSC"] == "True"
     lig_res_num = int(default["LigandResidueNumber"])
 
-
+    # Use an existant pkl file when possible
+    print("Attempting to read in .pkl file")
     try:
         df = pd.read_pickle(pkl_file_name)
     except:
+        print(".pkl file not found, generating one instead (this is normal)")
         csv_to_df_pkl(default["CSVFileName"], pkl_file_name, auto, path_to_conformers, pre_pose, res, lig_res_num)
         df = pd.read_pickle(pkl_file_name)
 
+    print("\nBeginning grading")
     align_to_residue_and_check_collision(post_pose, res, path_to_conformers, df, pkl_file_name, 
                                         bin_width, vdw_modifier, include_sc, lig_res_num)
 
     
-   
-
-
-
 
 if __name__ == "__main__":  
     main(sys.argv[1:])

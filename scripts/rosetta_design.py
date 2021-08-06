@@ -21,8 +21,8 @@ def prepare_pose_for_design(pose, focus_pos, lig, lig_aid):
     ccg = pyrosetta.rosetta.protocols.constraint_generator.CoordinateConstraintGenerator()
     ccg.set_residue_selector(lig_pos)
     ccg.set_sidechain(True)
-    ccg.set_bounded_width(0.25)
-    ccg.set_sd(0.5)
+    ccg.set_bounded_width(0.1)
+    ccg.set_sd(0.2)
     ccg.apply(complx)
 
     return complx
@@ -33,8 +33,6 @@ def make_mutations(pose, vdm_mutations):
     for position, residue in vdm_mutations:
         pyrosetta.toolbox.mutants.mutate_residue(complx, position, residue)
     return complx
-
-
 
 
 def determine_mutations(pose, mutation_string):
@@ -49,8 +47,8 @@ def determine_mutations(pose, mutation_string):
 def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus, rtc_bonus):
     
     # SET UP SCORE FUNCTION
-    sf= pyrosetta.get_fa_scorefxn()
-    unsat_penalty = 0.0025
+    sf = pyrosetta.get_fa_scorefxn()
+    unsat_penalty = 0.05
     sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 1.0)
     sf.set_weight(pyrosetta.rosetta.core.scoring.coordinate_constraint, 1.0)
     sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, unsat_penalty)
@@ -102,7 +100,7 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
     fr.set_movemap_factory(mmf)
     fr.ramp_down_constraints(False)
     fr.min_type('lbfgs_armijo_nonmonotone')
-    fr.max_iter(200)
+    fr.max_iter(300)
     
     # Apply FastRelax
     fr.apply(pose)
@@ -110,14 +108,23 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
 
     # Minimization without the buried unsatisfied penalty, recc. by Vmulligan
     sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, 0.0)
-
-    revert = pyrosetta.rosetta.protocols.protein_interface_design.Revert(sf, 0)
-    revert.apply(pose_wt, pose)
-
-
     mm = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
     mm.score_function(sf)
     mm.movemap_factory(mmf)
+    mm.apply(pose)
+
+    pre_revert_seq = pose.sequence()
+    revert = pyrosetta.rosetta.protocols.protein_interface_design.Revert(sf, 0.0)
+    revert.apply(pose_wt, pose)
+    post_revert_seq = pose.sequence()
+
+    num_reverts = 0
+    for a,b in zip(pre_revert_seq, post_revert_seq):
+        if a != b:
+            num_reverts += 1
+
+    print(f"Reverting {num_reverts} weak mutations")
+
     mm.apply(pose)
 
 
@@ -160,9 +167,7 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
                 print(f"Same as vdM: {ref_seq[i]}{pose.pdb_info().pose2pdb(i+1).split(empty_string)[0]}({i+1}){new_seq[i]}")
             else: 
                 print(f"{ref_seq[i]}{pose.pdb_info().pose2pdb(i+1).split(empty_string)[0]}({i+1}){new_seq[i]}")
-    pose.pdb_info().name(f"{conf_id}")
-    pmm = pyrosetta.PyMOLMover()
-    #pmm.apply(pose)
+
     all_mutations = " ".join(all_mutations)
     return (pose, all_mutations, mutations, SC, IFE, dSASA, ddG, dG_dSASA_ratio, num_buns)
 
