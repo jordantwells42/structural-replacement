@@ -3,21 +3,21 @@
 ### REQUIRED ###
 
 # Your path to your local installation of PyRosetta, e.g. /mnt/c/users/jorda/desktop/software/pyrosetta
-PathToPyrosetta = 
+PathToPyrosetta =
 
 # Your unmodified pdb file e.g. my_enzyme.pdb
 PrePDBFileName = 
 
 # Your pdb file after it has been modified by a mutation, deletion whatever it may be 
 # that is going to be replaced by a ligand e.g. my_enzyme_W100G.pdb
-PostPDBFileName = 
+PostPDBFileName =
 
 # The residue number of the structural feature you wish to map onto, this can be a 
 # ligand (if so the number would likely be 1) or a residue e.g. 12
-ResidueNumber = 
+ResidueNumber =
 
 # The chain the previous residue number is on, e.g. A
-ChainLetter = 
+ChainLetter =
 
 
 ### OPTIONAL ###
@@ -42,14 +42,13 @@ LigandResidueNumber = 1
 AutoGenerateAlignment = False
 
 
-
 [create_table]
 
 ### REQUIRED ###
 
 # Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
 # if they follow a convention ' conf1.sdf conf2.sdf ' then a wild-card (*) can be used 'conf*'
-MoleculeSDFs =
+MoleculeSDFs = 
 
 
 ### OPTIONAL ###
@@ -59,7 +58,6 @@ UseMoleculeID = True
 
 # Set to True if your molecules have no name on the sdf file, uses a simple count instead
 NoName = False
-
 
 
 
@@ -78,7 +76,6 @@ IncludeSC = False
 
 
 
-
 [vdm]
 
 ### REQUIRED ###
@@ -89,7 +86,7 @@ VDM_Directory =
 # A resfile containing residue that you wish to be mutated/included in vdM calculations
 # If you want a residue to be included for making vdMs but not to be able to mutate simply do
 # {res_num} A NATAA in the resfile
-Resfile = 
+Resfile =
 
 
 ### OPTIONAL ###
@@ -106,13 +103,17 @@ VDMScoreCutoff = 0
 # Maximum accepted RMSD between ligand CG and vdM cG
 RMSDCutoff = 1.0
 
+# Whether to print out all interactions as pdb files
+PrintToPDB = True
+
+# Location to print out interactions
+PathToVDMInteractions = ../vdm_pdbs
+
 # Whether to linearly interpolate between 0 and score depending on RMSD
 LERP = False
 
 # Whether to approximate functional groups (e.g. approximate ethers as thioethers)
 Bioisostere = False
-
-
 
 [rosetta_design]
 
@@ -120,23 +121,23 @@ Bioisostere = False
 
 # The protein you wish to design against, note this should be pre-relaxed with Rosetta
 # Should usually be the same as PostPDBFileName
-DesignPDBFile = 
+DesignPDBFile =
 
 # The vdm output file you wish to design against
-# Should usually be the same as the vdm Out
-DesignPKLFile = ../vdm_scored.pkl
+# Usually the same as the vdm OutputFileName
+DesignPKLFile = 
 
 # A resfile defining the mutations and residue changes allowed
-Resfile = designable.resfile
+# Usually the same as the VDM Resfile
+Resfile =
 
 # The residue number of a "focus" residue which is nearby to your structural feature,
 # This is used to define nearby residues as well as where to "anchor" the ligands
-# Usually just the same residue you mutate
+# if you are just doing a mutation, this can be the same residue as the mutation
 FocusResidueNumber =
 
 # The chain the previous residue number is on
-FocusChain =
-
+FocusChain = 
 
 ### OPTIONAL ###
 
