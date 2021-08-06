@@ -22,6 +22,9 @@ Conversion notes:
 
 This document will guide you through how to run the structural_replacement scripts for your project. A more detailed tutorial can be found here [https://docs.google.com/document/d/1NEq-mbIoxclpstKW4C55wvxyhdNPPFbA7jrmUidYLdk/edit?usp=sharing]
 
+**Acknowledgements**
+Thanks to [Nick Polizzi](https://github.com/npolizzi) for creating the [van der Mer structural unit](https://science.sciencemag.org/content/369/6508/1227) and providing access to the vdM database.
+
 **Prerequisites:**
 
 You do not need to know how to use any of the following, but they will be required by the scripts in order to run
