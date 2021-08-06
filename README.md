@@ -77,7 +77,7 @@ Manual input of atom alignments
 
 * Here you will fill in the resulting “Molecule Atoms” and “Target Atoms” columns in the generated spreadsheet by adding the atom labels for each that can be found with a software such as PyMOL by clicking on the atoms.
 * For example, if I wanted to align indole to Tryptophan, I’d go into PyMOL and find a substructure they share in common (such as the six-membered ring), choose corresponding atoms on that substructure, and list the atom labels .
-* This would ultimately look like a “C1-C5-C7” in the “Molecule Atoms” columns and a “"CD2-CZ2-CZ3” in the “Target Atoms” column
+* This would ultimately look like a “C1-C5-C7” in the “Molecule Atoms” columns and a “"CD2-CZ2-CZ3” in the “Target Atoms” column (by chooosing three correpsonding atoms on the six-membered ring)
 
 
 ```
