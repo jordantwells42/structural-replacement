@@ -128,9 +128,16 @@ run to_csv.py [path/to/dataframe.pkl] [path/to/new_spreadsheet.csv]
 \
 Protocol Capture
 Pyrosetta: PyRosetta-4 2020 Rosetta PyRosetta4.Release.python38.ubuntu 2020.25+release.d2d9f90b8cbcacfd7a1f69aefa5de610b100e8a9 2020-06-19T14:33:13
+
 Python: 3.8.5
+
 numpy: 1.21.1
+
 pandas: 1.3.0
+
 sklearn: 0.24.2
+
 ProDy: 2.0
+
 Biopython: 1.79
+
