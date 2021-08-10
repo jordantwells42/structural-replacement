@@ -12,7 +12,15 @@ from sklearn.neighbors import BallTree
 from configparser import ConfigParser
 import argparse
 
+import alignment
+import conformer_prep
+import collision_check  
+
 class vdM():
+    """
+    A class that stores all of the required information about
+    a vdM
+    """
     def __init__(self, score, position, residue, instance):
         self.score = score
         self.position = position
@@ -26,6 +34,9 @@ class vdM():
         self.CG = instance["CG"].values[0]
 
     def get_instance(self):
+        """
+        Returns a DataFrame instance of a vdM
+        """
         df = []
 
         count = 0
@@ -94,13 +105,6 @@ THREE_TO_ONE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
 ONE_TO_THREE = {v: k for k, v in THREE_TO_ONE.items()}
 
 
-"""
-TODO:
-* Add resfile support for precalculate_vdm_space
-* Determine whether lerping is worth it
-* Determine whether bioisostere is worth it and include ethers
-
-"""
 def resfile_parser(pose, resfile):
     """
     Takes in a pose of interest and a resfile and parses necessary information for VDM design
@@ -337,9 +341,11 @@ def precalculate_vdm_space(pose, resfile, pkl_file_stem, score_cutoff = 0):
                     except:
                         continue
 
+                    # Only accept hydrogen-bonding interactions
                     if (True not in instance["contact_hb"].values) and (True not in instance["contact_wh"].values): 
                         continue
                          
+                    # Only accept good scores
                     if score < score_cutoff or pd.isna(score):
                         continue
                     
@@ -354,6 +360,7 @@ def precalculate_vdm_space(pose, resfile, pkl_file_stem, score_cutoff = 0):
                     instance = instance.copy()
                     instance[["c_x", "c_y", "c_z"]] = (np.matmul(R, (instance[["c_x", "c_y", "c_z"]].values - m_com).transpose())).transpose() + t_com
 
+                    # Allows for flipped versions of chemical groups that are symmetric
                     if f"{vdm_label}-flip" in VDM_LABELS: labels.append(f"{vdm_label}-flip")
 
                     for label in labels:    
@@ -375,6 +382,8 @@ def precalculate_vdm_space(pose, resfile, pkl_file_stem, score_cutoff = 0):
 
 
             print(f"Finished {vdm_name}-{residue} interaction")
+
+        # Construct a nearest neighbors graph of the vdm interactions
         trees[vdm_name] = BallTree(vdm_coords[vdm_name], metric = orientation_dependent_metric)
         print(f"Completed {vdm_name}, time taken: {(time.time() - t0)/60} minutes")
 
@@ -397,21 +406,20 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
+    # Parsing config
     config = ConfigParser()
     config.read(args.config_file)
     default = config["DEFAULT"]
     spec = config["vdm"]
     sys.path.append(default["PathToPyRosetta"])
     
-    global pyrosetta, alignment, collision_check, Pose, conformer_prep, VDM_DIR, ABPLE_DICT
 
-
+    # Importing necessary dependencies
+    global pyrosetta, Pose, VDM_DIR, ABPLE_DICT
 
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
-    import alignment
-    import conformer_prep
-    import collision_check
+
     pyrosetta.init("-mute all")
 
     params_list = default["ParamsList"]
