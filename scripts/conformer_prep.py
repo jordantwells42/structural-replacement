@@ -11,6 +11,8 @@ import pandas as pd
 import argparse
 
 class Conformer():
+    # A class that stores all of the necessary information about conformers to be used by the other scripts
+    
     def __init__(self, pose, conf_num, mol_name, mol_id, lig_aid, t_aid = None, t_coords = None, ligand_residue = 1):
         self.pose = pose
         self.conf_num = conf_num
@@ -33,11 +35,22 @@ class Conformer():
         return grid.check_collision(self.pose.residue(self.ligand_residue))
 
     def determine_functional_groups(self, verbose = False, bioisostere = False):
+        """
+        Determines the functional groups for a ligand
+        If bioisostere is turned on it will approximate some functional groups as
+        vdM-compatible ones
+
+        Returns
+        List of tuples of (group name, atomnos, xyz coordinate matrix)
+        e.g. (coo, [atomno1, atomno2, atomno3], [[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]])
+
+
+        """
         lig = self.pose.residue(self.ligand_residue)
         ligtype = lig.type()
 
-        # List of tuples of (group name, xyz coordinate matrix)
-        # e,g, (coo, [[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]])
+        # List of tuples of (group name, atomnos, xyz coordinate matrix)
+        # e,g, (coo, [atomno1, atomno2, atomno3], [[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]])
         groups = []
 
         for atomno in range(1, lig.natoms() + 1):
