@@ -4,7 +4,13 @@ import argparse
 
 import pandas as pd
 
+import alignment
+import conformer_prep
+import collision_check
 
+
+# Appends the ligand to the residue and sets constraints for it to not move as much
+# Constraints kinda broke though
 def prepare_pose_for_design(pose, focus_pos, lig, lig_aid):
     complx = pyrosetta.Pose()
     complx.assign(pose)
@@ -21,12 +27,13 @@ def prepare_pose_for_design(pose, focus_pos, lig, lig_aid):
     ccg = pyrosetta.rosetta.protocols.constraint_generator.CoordinateConstraintGenerator()
     ccg.set_residue_selector(lig_pos)
     ccg.set_sidechain(True)
-    ccg.set_bounded_width(0.1)
-    ccg.set_sd(0.2)
+    ccg.set_bounded_width(0.2)
+    ccg.set_sd(0.25)
     ccg.apply(complx)
 
     return complx
 
+# Make the necessary vdM mutations to the protein
 def make_mutations(pose, vdm_mutations):
     complx = Pose()
     complx.assign(pose)
@@ -34,7 +41,8 @@ def make_mutations(pose, vdm_mutations):
         pyrosetta.toolbox.mutants.mutate_residue(complx, position, residue)
     return complx
 
-
+# Determine the mutations from a string of mutations and return them
+# IE something like W100G A502V
 def determine_mutations(pose, mutation_string):
     if mutation_string == "WT":
         pos_res = []
@@ -45,10 +53,9 @@ def determine_mutations(pose, mutation_string):
     return [(pose.pdb_info().pdb2pose("A", pos), res) for pos, res in pos_res]
 
 def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, ref_seq, conf_id, fnr_bonus, rtc_bonus):
-    
     # SET UP SCORE FUNCTION
     sf = pyrosetta.get_fa_scorefxn()
-    unsat_penalty = 0.05
+    unsat_penalty = 1.0
     sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 1.0)
     sf.set_weight(pyrosetta.rosetta.core.scoring.coordinate_constraint, 1.0)
     sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, unsat_penalty)
@@ -95,7 +102,7 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
 
 
     # SET UP FASTRELAX
-    fr = pyrosetta.rosetta.protocols.relax.FastRelax(scorefxn_in = sf, standard_repeats = 3)
+    fr = pyrosetta.rosetta.protocols.relax.FastRelax(sf, standard_repeats = 3)
     fr.set_task_factory(tf)
     fr.set_movemap_factory(mmf)
     fr.ramp_down_constraints(False)
@@ -107,14 +114,25 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
 
 
     # Minimization without the buried unsatisfied penalty, recc. by Vmulligan
-    sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, 0.0)
-    mm = pyrosetta.rosetta.protocols.minimization_packing.MinMover()
-    mm.score_function(sf)
-    mm.movemap_factory(mmf)
-    mm.apply(pose)
+    
+    sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 0)
+
+    repack_tf = pyrosetta.rosetta.core.pack.task.TaskFactory()
+    repack_tf.push_back(pyrosetta.rosetta.core.pack.task.operation.InitializeFromCommandline())
+    repack_tf.push_back(pyrosetta.rosetta.core.pack.task.operation.IncludeCurrent())
+    repack_tf.push_back(pyrosetta.rosetta.core.pack.task.operation.NoRepackDisulfides())
+    repack_tf.push_back(pyrosetta.rosetta.core.pack.task.operation.RestrictToRepacking())
+    repack_tf.push_back(pyrosetta.rosetta.core.pack.task.operation.OperateOnResidueSubset(rlt, nbr, True))
+
+    fr = pyrosetta.rosetta.protocols.relax.FastRelax(sf, standard_repeats = 3)
+    fr.set_task_factory(repack_tf)
+    fr.set_movemap_factory(mmf)
+    fr.ramp_down_constraints(False)
+    fr.min_type('lbfgs_armijo_nonmonotone')
+    fr.max_iter(300)
 
     pre_revert_seq = pose.sequence()
-    revert = pyrosetta.rosetta.protocols.protein_interface_design.Revert(sf, 0.0)
+    revert = pyrosetta.rosetta.protocols.protein_interface_design.Revert(sf, 0)
     revert.apply(pose_wt, pose)
     post_revert_seq = pose.sequence()
 
@@ -125,15 +143,18 @@ def design(pose, pose_wt, focus_seqpos, resfile, vdm_positions, vdm_mutations, r
 
     print(f"Reverting {num_reverts} weak mutations")
 
-    mm.apply(pose)
+    sf.set_weight(pyrosetta.rosetta.core.scoring.buried_unsatisfied_penalty, 0)
+
+    fr.set_scorefxn(sf)
+    fr.apply(pose)
 
 
     # Analyzing interface
     sf.set_weight(pyrosetta.rosetta.core.scoring.coordinate_constraint, 0.0)
-    sf.set_weight(pyrosetta.rosetta.core.scoring.res_type_constraint, 0.0)
 
     interface_analyzer = pyrosetta.rosetta.protocols.analysis.InterfaceAnalyzerMover(jump_num)
     interface_analyzer.set_scorefunction(sf)
+    interface_analyzer.set_pack_input(True)
     interface_analyzer.set_pack_separated(True)
     interface_analyzer.set_pack_rounds(3)
     interface_analyzer.set_compute_interface_sc(True)
@@ -201,9 +222,6 @@ def main(argv):
     global pyrosetta, alignment, collision_check, Pose, conformer_prep
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
-    import alignment
-    import conformer_prep
-    import collision_check
 
     pyrosetta.init("-mute all -multithreading:total_threads 10")
 
@@ -243,7 +261,7 @@ def main(argv):
     df = df.sort_values(score_type, ascending = False).drop_duplicates(["Molecule ID"], keep = "first")
     
 
-    for i, molecule_df in df.iterrows():    
+    for i, molecule_df in df[0:100].iterrows():    
         print("\n\nPreparing pose for design")
         pose = pyrosetta.pose_from_pdb(spec["DesignPDBFile"])
         ref_seq = pose.sequence()
