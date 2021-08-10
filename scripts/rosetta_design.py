@@ -219,7 +219,7 @@ def main(argv):
     # Importing necessary dependencies
     print("Importing necessary dependencies")
     sys.path.append(default["PathToPyRosetta"])    
-    global pyrosetta, alignment, collision_check, Pose, conformer_prep
+    global pyrosetta, Pose
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
 
