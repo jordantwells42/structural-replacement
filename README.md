@@ -20,7 +20,7 @@ Conversion notes:
 ----->
 ### Structural Replacement ###
 
-This document will guide you through how to run the structural-replacement scripts for your project. A more detailed tutorial can be found here that walks through a simple example [https://docs.google.com/document/d/1NEq-mbIoxclpstKW4C55wvxyhdNPPFbA7jrmUidYLdk/edit?usp=sharing]
+This document will guide you through how to run the structural-replacement scripts for your project. A more detailed tutorial can be found here that walks through a demo example [https://docs.google.com/document/d/1NEq-mbIoxclpstKW4C55wvxyhdNPPFbA7jrmUidYLdk/edit?usp=sharing]
 
 \
 **Acknowledgements:**
