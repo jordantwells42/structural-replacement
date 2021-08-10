@@ -2,6 +2,10 @@ import sys
 import os
 import time
 
+import alignment
+import conformer_prep
+import collision_check
+
 import pandas as pd
 
 from configparser import ConfigParser
@@ -93,9 +97,6 @@ def align_to_residue_and_check_collision(pose, res, path_to_conformers, df, pkl_
     grid = collision_check.CollisionGrid(pose, bin_width = bin_width, vdw_modifier = vdw_modifier, include_sc = include_sc)
 
 
-    all_accepted_all_files = []
-    total_confs_all_files = 0
-
     t0 = time.time()
 
     all_accepted = []
@@ -165,6 +166,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
+    # Parsing config file
     config = ConfigParser()
     config.read(args.config_file)
     default = config["DEFAULT"]
@@ -172,13 +174,11 @@ def main(argv):
     sys.path.append(default["PathToPyRosetta"])
     auto = default["AutoGenerateAlignment"] == "True"
     
-    global pyrosetta, alignment, collision_check, Pose, conformer_prep
+    # Importing necessary dependencies
+    global pyrosetta, Pose
 
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
-    import alignment
-    import conformer_prep
-    import collision_check
 
     pyrosetta.init("-mute all")  
 
