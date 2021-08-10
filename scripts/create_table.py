@@ -18,10 +18,11 @@ def generate_params_pdb_and_table(mtp, csv_file_name, path_to_conformers, molecu
     molecule_sdfs: list of strings of molec Moule sdfs to read in and generate params file/pdbs for
     use_mol_id: boolean, if a mol id is present on the third line of each molecule in the sdf
         uses that to name directories and files
+    no_name: boolean, if the sdf file has no discernable name then just name them sequentially
 
     Creates:
     csv_file with the following columns:
-        Molecule Name, Molecule ID, Molecule File Stem, Conformer Range, Molecule Atoms, Residue Atoms
+        Molecule Name, Molecule ID, Conformer Range, Molecule Atoms, Residue Atoms
         Molecule name: Name of the molecule as determined by first line of SDF
         Molecule ID: ID of the molecule as determiend by the third line of SDF (optional)
         Conformer Range: How many conformers were used in generating the params file
@@ -48,6 +49,8 @@ def generate_params_pdb_and_table(mtp, csv_file_name, path_to_conformers, molecu
                 if len(lines) == 0:
                     continue
                 mol_name = lines[0].strip()
+                
+
                 if use_mol_id:
                     mol_id = lines[2].split(" ")[0].strip()
                     file_stem = f"{mol_id}/{mol_id}"
@@ -86,6 +89,7 @@ def main(argv):
 
     args = parser.parse_args(argv)
 
+    # Reading config file
     config = ConfigParser()
     config.read(args.config_file)
     default = config["DEFAULT"]
@@ -99,6 +103,7 @@ def main(argv):
     input_molecule_sdfs = spec["MoleculeSDFs"].split(" ")
 
 
+    # Grabbing all of the Molecule SDFs
     molecule_sdfs = []
     for inp in input_molecule_sdfs:
         if "*" in inp:
@@ -115,7 +120,6 @@ def main(argv):
 
     use_mol_id = spec["UseMoleculeID"] == "True"
     no_name = spec["NoName"] == "True"
-
 
     generate_params_pdb_and_table(mtp, csv_file_name, path_to_conformers, molecule_sdfs, use_mol_id, no_name)
     print(f"Succesfully generated table at {csv_file_name} and conformers at {path_to_conformers}")
