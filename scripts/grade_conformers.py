@@ -2,10 +2,6 @@ import sys
 import os
 import time
 
-import alignment
-import conformer_prep
-import collision_check
-
 import pandas as pd
 
 from configparser import ConfigParser
@@ -175,10 +171,13 @@ def main(argv):
     auto = default["AutoGenerateAlignment"] == "True"
     
     # Importing necessary dependencies
-    global pyrosetta, Pose
+    global pyrosetta, Pose, alignment, conformer_prep, collision_check
 
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
+    import alignment
+    import conformer_prep
+    import collision_check
 
     pyrosetta.init("-mute all")  
 

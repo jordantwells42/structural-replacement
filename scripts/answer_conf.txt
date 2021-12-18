@@ -51,7 +51,7 @@ AutoGenerateAlignment = False
 
 # Input molecule SDF files separated by spaces, e.g. 'TRP.sdf WIN.sdf ABA.sdf' or alternatively 
 # if they follow a convention ' conf1.sdf conf2.sdf ' then a wild-card (*) can be used 'conf*'
-MoleculeSDFs = ../indole.sdf ../phenol.sdf
+MoleculeSDFs = ../indole.sdf ../indole-5-methanol.sdf
 
 
 ### OPTIONAL ###
@@ -99,6 +99,12 @@ OutputFileName = ../vdm_scored.pkl
 
 # Name for the outputted VDMSpace files
 VDMSpaceFileStem = ../VDM-SPACE
+
+# Whether to print out all interactions as pdb files
+PrintToPDB = True
+
+# Location to print out interactions
+PathToVDMInteractions = ../vdm_pdbs
 
 # Minimum accepted score for vdMs, 0 is the average
 VDMScoreCutoff = 0

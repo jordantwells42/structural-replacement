@@ -8,9 +8,7 @@ from precalculate_vdm_space import orientation_dependent_metric, rmsd_distance_m
 from configparser import ConfigParser
 import argparse
 
-import alignment
-import conformer_prep
-import collision_check
+
 
 import pandas as pd
 import numpy as np
@@ -307,10 +305,13 @@ def main(argv):
 
     sys.path.append(default["PathToPyRosetta"])
     
-    global pyrosetta, Pose
+    global pyrosetta, Pose, alignment, conformer_prep, collision_check
 
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
+    import alignment
+    import conformer_prep
+    import collision_check
 
     pyrosetta.init("-mute all")
     prody.confProDy(verbosity = 'none')

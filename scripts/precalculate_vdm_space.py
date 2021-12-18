@@ -10,11 +10,7 @@ import numpy as np
 from sklearn.neighbors import BallTree
 
 from configparser import ConfigParser
-import argparse
-
-import alignment
-import conformer_prep
-import collision_check  
+import argparse 
 
 class vdM():
     """
@@ -415,10 +411,13 @@ def main(argv):
     
 
     # Importing necessary dependencies
-    global pyrosetta, Pose, VDM_DIR, ABPLE_DICT
+    global pyrosetta, Pose, VDM_DIR, ABPLE_DICT, alignment, conformer_prep, collision_check
 
     import pyrosetta
     from pyrosetta.rosetta.core.pose import Pose
+    import alignment
+    import conformer_prep
+    import collision_check 
 
     pyrosetta.init("-mute all")
 
