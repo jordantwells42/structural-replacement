@@ -8,7 +8,7 @@ from configparser import ConfigParser
 import argparse
 
 
-def align_conformers(pose, res, path_to_conformers, df, pkl_file, lig_res_num = 1):
+def align_conformers(pose, res, path_to_conformers, df, pkl_file, lig_res_num = 1, passes_collision_check = False):
     """
     Aligns conformers based off the input file
 
@@ -26,7 +26,7 @@ def align_conformers(pose, res, path_to_conformers, df, pkl_file, lig_res_num = 
 
     total_confs = 0
 
-    for pose_info in conformer_prep.yield_ligand_poses(df = df, path_to_conformers = path_to_conformers, post_accepted_conformers = False, ligand_residue = lig_res_num):
+    for pose_info in conformer_prep.yield_ligand_poses(df = df, path_to_conformers = path_to_conformers, post_accepted_conformers = passes_collision_check, ligand_residue = lig_res_num):
         
         if not pose_info:
             print(f"{conf.name}, {conf.id}")
@@ -52,6 +52,9 @@ def main(argv):
     parser.add_argument("config_file",
                         help = "your config file",
                         default = "my_conf.txt")
+    parser.add_argument("-c", "passes_collision_check"
+                        help = "Whether to only show ones that pass collison check (True/False)",
+                        default = "False")
     
     if len(argv) == 0:
         print(parser.print_help())
@@ -121,7 +124,7 @@ def main(argv):
         df = pd.read_pickle(pkl_file_name)
 
     print("\nBeginning grading")
-    align_conformers(post_pose, res, path_to_conformers, df, pkl_file_name,lig_res_num)
+    align_conformers(post_pose, res, path_to_conformers, df, pkl_file_name,lig_res_num, args.passes_collision_check.lower() == "true")
 
     
 
