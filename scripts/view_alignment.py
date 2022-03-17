@@ -52,7 +52,7 @@ def main(argv):
     parser.add_argument("config_file",
                         help = "your config file",
                         default = "my_conf.txt")
-    parser.add_argument("-c", "passes_collision_check"
+    parser.add_argument("-c", "--passes_collision_check",
                         help = "Whether to only show ones that pass collison check (True/False)",
                         default = "False")
     
