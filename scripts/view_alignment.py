@@ -29,7 +29,8 @@ def align_conformers(pose, res, path_to_conformers, df, pkl_file, lig_res_num = 
     for pose_info in conformer_prep.yield_ligand_poses(df = df, path_to_conformers = path_to_conformers, post_accepted_conformers = passes_collision_check, ligand_residue = lig_res_num):
         
         if not pose_info:
-            print(f"{conf.name}, {conf.id}")
+            if conf in locals():
+                print(f"{conf.name}, {conf.id}")
             continue
 
         # Grab the conformer from the generator
