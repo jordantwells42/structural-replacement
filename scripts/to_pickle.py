@@ -20,7 +20,7 @@ def main(argv):
     
     df = pd.read_csv(f"{args.csv_file_name}", index_col = False)
 
-    for col in ["Positions", "Accepted Conformers"]:
+    for col in ["Positions", "Accepted Conformers", "Molecule atoms", "Target Atoms"]:
         if col in df.columns:
             df[col] = df[col].map(lambda x: eval(x))
 
