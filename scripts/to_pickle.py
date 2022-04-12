@@ -21,7 +21,8 @@ def main(argv):
     df = pd.read_csv(f"{args.csv_file_name}", index_col = False)
 
     for col in ["Positions", "Accepted Conformers"]:
-        df[col] = df[col].map(lambda x: eval(x))
+        if col in df.columns:
+            df[col] = df[col].map(lambda x: eval(x))
 
     df.to_pickle(args.pkl_file_name, protocol = 4)
 
