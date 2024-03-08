@@ -7,6 +7,29 @@ import sklearn.decomposition
 from sklearn.neighbors import BallTree
 import sklearn
 
+def svd_new(P, Q):
+    P = P.copy()
+    Q = Q.copy()
+    p_com = np.mean(P, 0)
+    t_com = np.mean(Q, 0)
+    assert P.shape == Q.shape
+    n, dim = P.shape
+
+    centeredP = P - P.mean(axis=0)
+    centeredQ = Q - Q.mean(axis=0)
+
+    C = np.dot(np.transpose(centeredP), centeredQ) / n
+
+    V, S, W = np.linalg.svd(C)
+    d = (np.linalg.det(V) * np.linalg.det(W)) < 0.0
+
+    if d:
+        S[-1] = -S[-1]
+        V[:, -1] = -V[:, -1]
+
+    R = np.dot(V, W)
+
+    return [e for e in np.nditer(p_com)], [e for e in np.nditer(t_com)], [e for e in np.nditer(R)]
 
 def svd_flatten(P, Q):
     """
@@ -24,6 +47,8 @@ def svd_flatten(P, Q):
     t_com: Center of mass of target
     R: rotation matrix between object to targetx (as a list)
     """
+    P = P.copy()
+    Q = Q.copy()
     p_com = np.mean(P, 0)
     t_com = np.mean(Q, 0)
     
@@ -90,7 +115,7 @@ def align_pose_coords_to_target_coords(pose, p_xyzs, t_xyzs):
     t_xyz_mat = np.matrix(t_xyzs)
 
         
-    p_com, t_com, R = svd_flatten(p_xyz_mat, t_xyz_mat)
+    p_com, t_com, R = svd_new(p_xyz_mat, t_xyz_mat)
 
     # Converting list types into Rosetta-friendly types
     R = xyzMatrix_double_t.rows(*R)
@@ -236,7 +261,7 @@ def auto_align_residue_to_residue(pose, res1, res2):
 
         aligned_atoms += len([e for e in approved_dists if e[0] < 1])
 
-        p_com, t_com, R = svd_flatten(np.matrix(p_corr), np.matrix(t_corr))
+        p_com, t_com, R = svd_new(np.matrix(p_corr), np.matrix(t_corr))
         R = xyzMatrix_double_t.rows(*R)
         p_com = xyzVector_double_t(*p_com)
         t_com = xyzVector_double_t(*t_com)
