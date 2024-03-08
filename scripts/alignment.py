@@ -12,23 +12,22 @@ def svd_new(P, Q):
     Q = Q.copy()
     p_com = np.mean(P, 0)
     t_com = np.mean(Q, 0)
-    assert P.shape == Q.shape
-    n, dim = P.shape
+    
+    P -= p_com
+    Q -= t_com
+    
+    M = np.matmul(P.transpose(), Q)
 
-    centeredP = P - P.mean(axis=0)
-    centeredQ = Q - Q.mean(axis=0)
+    U, W, Vt = np.linalg.svd(M)
 
-    C = np.dot(np.transpose(centeredP), centeredQ) / n
-
-    V, S, W = np.linalg.svd(C)
-    d = (np.linalg.det(V) * np.linalg.det(W)) < 0.0
+    d = (np.linalg.det(U) * np.linalg.det(Vt)) < 0.0
+    
 
     if d:
-        S[-1] = -S[-1]
-        V[:, -1] = -V[:, -1]
+        U[:, -1] = -U[:, -1]
 
-    R = np.dot(V, W)
-
+    R = np.matmul(Vt.transpose(),U.transpose())
+    
     return [e for e in np.nditer(p_com)], [e for e in np.nditer(t_com)], [e for e in np.nditer(R)]
 
 def svd_flatten(P, Q):
